@@ -26,7 +26,6 @@ class MainPageState extends State<MainPage>
 
   final GlobalKey<ScaffoldState> _key = GlobalKey();
   int selectedIndex = 0;
-  int currentIndex = 0;
   ValueNotifier<int> tabResetDeterminant = ValueNotifier<int>(0);
 
   // Home page . . .
@@ -50,35 +49,15 @@ class MainPageState extends State<MainPage>
   @override
   void initState() {
     super.initState();
-    // scrollController.addListener(scrollListener);
     getConnectivity();
+    // scrollController.addListener(scrollListener);
+
     /* bardWebViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(NavigationDelegate())
       ..loadRequest(Uri.parse('https://bard.google.com')); */
   }
-
-  // void scrollListener() {
-  //   // Handle scrolling actions here
-  //   double currentScrollPosition = scrollController.position.pixels;
-  //   if (currentScrollPosition > previousScrollPosition) {
-  //     // Scrolling down
-  //     print("Scrolling down");
-  //     setState(() {
-  //       scrolled = true;
-  //     });
-  //   } else {
-  //     // Scrolling up
-  //     print("Scrolling up");
-  //     setState(() {
-  //       scrolled = false;
-  //     });
-  //   }
-
-  //   // Update the previous scroll position
-  //   previousScrollPosition = currentScrollPosition;
-  // }
 
   @override
   void dispose() {
@@ -91,27 +70,60 @@ class MainPageState extends State<MainPage>
   Widget build(BuildContext context) {
     return Scaffold(
       key: _key,
+      appBar: AppBar(
+        title: const Text("My Football News"),
+        centerTitle: true,
+        backgroundColor: appColor,
+        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.search))],
+      ),
       body: StreamBuilder(
         stream: Connectivity().onConnectivityChanged,
         builder: (context, AsyncSnapshot<ConnectivityResult> snapshot) {
-          // sometimes the stream builder doesn't work with simulator so you can check this on real devices to get the right result
-
-          if (snapshot.hasData) {
-            ConnectivityResult? result = snapshot.data;
-            if (result == ConnectivityResult.mobile ||
-                result == ConnectivityResult.wifi) {
+          ConnectivityResult? result = snapshot.data;
+          if (result == ConnectivityResult.mobile ||
+              result == ConnectivityResult.wifi) {
+            if (snapshot.hasData) {
               return WillPopScope(
                   onWillPop: () async {
                     return true;
                   },
                   child: frameItems()[selectedIndex]);
             } else {
-              return noInternet();
+              return loading();
             }
           } else {
-            return loading();
+            return noInternet();
           }
         },
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: const [
+            DrawerHeader(
+              decoration: BoxDecoration(color: appColor),
+              child: Center(
+                  child: Text(
+                "My Football News",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600),
+              )),
+            ),
+            ListTile(
+              title: Text("About"),
+            ),
+            ListTile(
+              title: Text("Contact Us"),
+            ),
+            ListTile(
+              title: Text("Privacy Policy"),
+            ),
+            ListTile(
+              title: Text("Rate Us"),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -123,18 +135,10 @@ class MainPageState extends State<MainPage>
         currentIndex: selectedIndex,
         type: BottomNavigationBarType.fixed,
         onTap: (value) {
-          // if (selectedIndex == 0 && currentIndex == 0) {
-          //   setState(() {
-          //     tc.animateTo(0);
-          //     // scrolled = false;
-          //   });
-          // } else {
           setState(() {
             selectedIndex = value;
-            currentIndex = selectedIndex;
           });
         },
-        // },
         items: [
           const BottomNavigationBarItem(
             label: 'Home',
@@ -188,41 +192,6 @@ class MainPageState extends State<MainPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          otherTabs ? Container() : header(context),
-          otherTabs
-              ? Container()
-              : scrolled
-                  ? Container()
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 15.0, vertical: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          mediaIcons(
-                              'Google',
-                              Image.asset("assets/icons/google.png"),
-                              'https://google.com'),
-                          mediaIcons(
-                              'Youtube',
-                              Image.asset("assets/icons/yt.png"),
-                              'https://www.youtube.com/'),
-                          mediaIcons(
-                              'Facebook',
-                              Image.asset("assets/icons/facebook.png"),
-                              'https://www.facebook.com/'),
-                          mediaIcons(
-                              'Instagram',
-                              Image.asset("assets/icons/insta.png"),
-                              'https://www.instagram.com/'),
-                          mediaIcons(
-                              'Twitter',
-                              Image.asset("assets/icons/twitter.png"),
-                              'https://www.twitter.com/'),
-                        ],
-                      ),
-                    ),
-          Container(height: 0.5, color: Colors.grey, width: double.maxFinite),
           !gotLabels
               ? Container()
               : SizedBox(
@@ -253,7 +222,7 @@ class MainPageState extends State<MainPage>
             });
           } else {
             getLabels();
-            getLinks();
+            getLinks(offset: 1);
           }
         },
       );
@@ -267,37 +236,43 @@ class MainPageState extends State<MainPage>
   }
 
   Widget noInternet() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        /*  Image.asset(
-          'assets/images/no_internet.png',
-          color: Colors.red,
-          height: 100,
-        ), */
-        Container(
-          margin: const EdgeInsets.only(top: 20, bottom: 10),
-          child: const Text(
-            "No Internet connection",
-            style: TextStyle(fontSize: 22),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          child: const Text("Check your connection, then refresh the page."),
-        ),
-        ElevatedButton(
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(Colors.green),
-          ),
-          onPressed: () async {
-            // You can also check the internet connection through this below function as well
-            ConnectivityResult result =
-                await Connectivity().checkConnectivity();
-            print(result.toString());
-          },
-          child: const Text("Refresh"),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            /*  Image.asset(
+              'assets/images/no_internet.png',
+              color: Colors.red,
+              height: 100,
+            ), */
+            Container(
+              margin: const EdgeInsets.only(top: 20, bottom: 10),
+              child: const Text(
+                "No Internet connection",
+                style: TextStyle(fontSize: 22),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              child:
+                  const Text("Check your connection, then refresh the page."),
+            ),
+            ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.green),
+              ),
+              onPressed: () async {
+                // You can also check the internet connection through this below function as well
+                ConnectivityResult result =
+                    await Connectivity().checkConnectivity();
+                print(result.toString());
+              },
+              child: const Text("Refresh"),
+            ),
+          ],
         ),
       ],
     );
@@ -1060,15 +1035,19 @@ class MainPageState extends State<MainPage>
     return response.body;
   }
 
-  void getLinks() async {
-    var linksData = await ApiClient.free().getLinks();
-    for (var data in linksData) {
-      links.add(LinkModel.fromJson(data));
+  void getLinks({int offset = 0}) async {
+    try {
+      var linksData = await ApiClient.free().getLinks(offset: offset);
+      for (var data in linksData) {
+        links.add(LinkModel.fromJson(data));
+      }
+      setState(() {
+        // links = links.reversed.toList();
+        checkedServer = true;
+      });
+    } catch (e) {
+      print('Error fetching links: $e');
     }
-    setState(() {
-      links = links.reversed.toList();
-      checkedServer = true;
-    });
   }
 
   void getLabels() async {

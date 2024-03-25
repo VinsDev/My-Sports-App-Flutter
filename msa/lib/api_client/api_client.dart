@@ -10,9 +10,17 @@ class ApiClient {
   ApiClient.free() : authToken = '';
   ApiClient({required this.authToken});
 
-  Future<dynamic> getLinks() async {
-    const endpoint = 'api/links';
-    return _getCachedOrFetch(endpoint);
+  Future<dynamic> getLinks({int offset = 0}) async {
+    final endpoint = 'https://myfootballnewsapp.uk/api/links?offset=$offset';
+    final response = await http.get(Uri.parse(endpoint));
+
+    if (response.statusCode == 200) {
+      // If the request is successful, parse the response body
+      return json.decode(response.body);
+    } else {
+      // If the request fails, throw an exception or handle the error accordingly
+      throw Exception('Failed to load links');
+    }
   }
 
   Future<dynamic> getLabels() async {

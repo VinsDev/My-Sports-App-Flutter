@@ -71,8 +71,8 @@ class _ExternalSiteState extends State<ExternalSite> {
       await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-                title: Text("Confirmation"),
-                content: Text("Do you want to exit the post ?"),
+                title: const Text("Confirmation"),
+                content: const Text("Do you want to exit the post ?"),
                 actions: [
                   TextButton(
                       onPressed: () {
@@ -81,7 +81,7 @@ class _ExternalSiteState extends State<ExternalSite> {
                           goBack = false;
                         });
                       },
-                      child: Text("No")),
+                      child: const Text("No")),
                   TextButton(
                       onPressed: () {
                         Navigator.of(context).pop(true);
@@ -89,7 +89,7 @@ class _ExternalSiteState extends State<ExternalSite> {
                           goBack = true;
                         });
                       },
-                      child: Text("Yes"))
+                      child: const Text("Yes"))
                 ],
               ));
       if (goBack) Navigator.pop(context);
